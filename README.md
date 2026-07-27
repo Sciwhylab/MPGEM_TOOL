@@ -1,100 +1,127 @@
-# MPGEM — Molecular Prediction of Gene Expression Matrix
+# mpgem
 
-MPGEM is a web tool that expands a partial gene expression matrix into a much larger one.
-You supply expression values for a defined set of genes; a pre-trained deep learning model
-predicts the values for the remaining genes and returns the two sets merged into a single matrix.
+_This repository is a work in progress_ 
 
-Developed and maintained by **SciWhy Lab**.
+Tools for microarray / gene expression matrix processing.
 
----
+The package currently provides one tool, **mpgemnorm**: reference quantile
+normalization of an expression matrix onto a fixed GPL570 reference distribution.
+Normalizing to a shared external reference (rather than within each dataset) makes
+values comparable across studies. All reference data is bundled with the package —
+nothing to download.
 
-## Access
+On the command line the tool is invoked as `mpgem qnorm`; in Python it is imported as
+`mpgem.mpgemnorm`.
 
-**https://mpgempre.streamlit.app**
+## Install
 
-The tool is freely available in any web browser. There is nothing to install, no account to create,
-and no login required — open the link and start uploading. It works on desktop and mobile browsers,
-though a desktop screen is more comfortable for reviewing large matrices.
+From GitHub:
 
-Your uploaded file is processed for the duration of your session only. Results are yours to
-download; nothing is stored after the session ends.
+```
+pip install "git+https://github.com/Sciwhylab/MPGEM_TOOL.git"
+```
 
----
+numpy, pandas and scipy are installed automatically. Requires Python >= 3.10.
+This creates the `mpgem` command and bundles the reference data inside the package.
 
-## What it does
+Optionally, in an isolated environment:
 
-The underlying model works from a fixed reference gene list. The first **12,712** genes in that
-list form the model's input; every remaining gene in the list is predicted. Given a matrix covering
-the input genes, MPGEM returns predicted expression values for the full reference set, so a
-narrow measured matrix becomes a genome-scale one.
+```
+conda create -n mpgem python=3.12 -y
+conda activate mpgem
+pip install "git+https://github.com/Sciwhylab/MPGEM_TOOL.git"
 
----
+```
 
-## Using the tool
+Check the install:
 
-The interface is organised as five tabs, worked through in order.
+```
+mpgem --version
+mpgem qnorm --help
+```
 
-### 1. Upload & Validate
+## Usage
 
-Upload your CSV. The tool previews it, reports how many samples and genes it contains, and shows
-how many of your samples already appear in the MPGEM reference sample list versus how many are new.
-It then checks your gene set against what the model requires and tells you whether you are ready to
-proceed. The full list of required reference genes can be browsed here, and a correctly formatted
-sample file is available for download if you want to see the expected layout first.
+### Command line
 
-### 2. Predict
+```
+mpgem qnorm --matrix mydata.tsv --out result.tsv
+```
 
-Once validation passes, run the model. The merged matrix of measured and predicted values is
-generated and previewed.
+Only `--matrix` and `--out` are required; the probe map, RQD, and gene-averages table
+are read from the bundled package data. Output and a `qnorm.log` are written to the
+folder given in `--out` (the folder is created if it does not exist).
 
-### 3. Download
+### Python
 
-Export the complete matrix as a CSV.
+```python
+from mpgem.mpgemnorm import run
 
-### 4. Query
-
-Filter the results before downloading — by gene name, by sample ID, or by both. The filtered subset
-can be downloaded separately.
-
-### 5. Tutorial
-
-A walkthrough video and written instructions covering each of the steps above.
-
----
+run(matrix_path="mydata.tsv", out_path="result.tsv")
+```
 
 ## Input format
 
-A CSV file in which the first column holds sample IDs and every following column is a gene:
+A tab-separated matrix with samples as rows and gene symbols (or GPL570 probe IDs) as
+columns; the first column is the sample ID. Columns must be all genes or all probes,
+not a mix.
+
+- **Gene-level input** - kept genes are matched against the reference; genes not in the
+  reference are dropped (listed in `dropped_genes.tsv`).
+- **Probe-level input** - detected automatically, collapsed to gene level (max per gene);
+  probes not in the map are dropped (listed in `dropped_probes.tsv`).
+
+NumPy input is also accepted: `--matrix data.npy --gene-names genes.tsv`
+(`--sample-ids` optional; defaults to `S0, S1, ...`).
+
+## How it works
+
+For each sample, genes are ranked and each value is replaced by the reference value at
+that rank. Two paths are chosen automatically:
+
+| Coverage | Condition | Reference distribution |
+|---|---|---|
+| FULL | input covers all 19,320 reference genes | precomputed RQD (`reference_rqd.npy`) |
+| SUBSET | input covers fewer genes | RSQD built from per-gene averages of those genes |
+
+For the subset case the reference sub-distribution (RSQD) is built by taking the
+per-gene averages of the covered genes and sorting them, rather than streaming the full
+reference matrix. This holds because gene ranks are stable across the already
+quantile-normalized reference.
+
+## Options
 
 ```
-sample_id,A1BG,A1CF,A2M,...
-sample_1,4.21,2.98,7.55,...
-sample_2,3.87,3.10,7.02,...
+mpgem qnorm --matrix M.tsv --out DIR/O.tsv                    # gene- or probe-level TSV
+mpgem qnorm --matrix M.npy --out DIR/O.tsv --gene-names G.tsv [--sample-ids S.tsv]
+mpgem qnorm --matrix M.tsv --out DIR/O.tsv --nan-action zero  # default: drop
+mpgem qnorm --matrix M.tsv --out DIR/O.tsv --map ... --rqd ... --averages ...
+mpgem qnorm --matrix M.tsv --out DIR/O.tsv --chunk-rows 100   # lower = less memory
 ```
 
-Values should be normalized gene expression values. Gene names must use official HGNC symbols —
-you can check yours with the
-[HGNC Multi-Symbol Checker](https://www.genenames.org/tools/multi-symbol-checker/).
+By default, genes containing NaN are dropped (listed in `nan_dropped_genes.tsv`);
+`--nan-action zero` fills them with zero instead. The bundled reference can be
+overridden with `--map`, `--rqd`, and `--averages` - supply all three together,
+generated from the same reference matrix.
 
-Column order does not matter; the tool reorders columns to the model's expected sequence for you.
-Extra genes beyond the required set are permitted and simply ignored. If any required gene is
-absent, the tool will not run the prediction and will list exactly which genes are missing so you
-can correct the file.
+## Reference data
 
----
+Bundled in `src/mpgem/mpgemnorm/data/`:
 
-## Output
+- `probe_map.tsv` - GPL570 probe -> gene-symbol map (41,115 probes -> 19,320 genes),
+  derived from the GPL570 (Affymetrix Human Genome U133 Plus 2.0) platform annotation.
+- `reference_gene_averages.tsv` - per-gene averages of the reference matrix
+  (19,320 genes), used to build the subset RSQD.
+- `reference_rqd.npy` - the full reference quantile distribution (19,320 values).
 
-A CSV indexed by your sample IDs, containing your original input genes alongside the predicted
-genes. The file can be downloaded in full, or as a filtered subset via the Query tab.
+The reference statistics were computed from GPL570 expression data obtained from NCBI
+GEO. <!-- TODO: add GEO accession(s) and a one-line description of how the reference
+matrix was produced. -->
 
----
+## Citation
 
-## Contact and support
+<!-- TODO: add once the paper / preprint is available. -->
 
-- Email: [shandar@sciwhylab.org](mailto:shandar@sciwhylab.org)
-- Report a problem: [open an issue](https://github.com/SougataJana/MPGEM_PREDICTION_TOOL/issues/new)
-- Source code: [SougataJana/MPGEM_PREDICTION_TOOL](https://github.com/SougataJana/MPGEM_PREDICTION_TOOL)
-- Lab website: [shandarslab.org](http://shandarslab.org)
+## License
 
-A contact panel with these links is also available from the button in the corner of the app.
+<!-- TODO: add a LICENSE file (e.g. MIT) and state it here. -->
