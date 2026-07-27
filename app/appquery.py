@@ -317,7 +317,7 @@ with st.container():
         unsafe_allow_html=True
     )
 st.divider()
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["» Upload & Validate", "✨ Predict", "⤓ Download", "🎯 Query", "🗺️ Tutorial"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["» Upload & Validate", " Predict", " Download", " Query", " Tutorial"])
 
 # --------------------
 # TAB 1: UPLOAD & VALIDATE
