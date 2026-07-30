@@ -17,6 +17,7 @@ import tempfile
 import gdown
 import os
 import base64
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 # Flexible import for TensorFlow/Keras
 try:
@@ -35,7 +36,7 @@ REFERENCE_FILE_ID = "1-DSpHwN4TbFvGsYEv-UboB4yrvWPKDZo"
 MODEL_FILE_ID = "13N99OC_fplCKZHz2H52AFQaSeAI1Ai-v"
 MPGEM_SAMPLES_FILE_ID = "1-lFwC8w_lNDLmxVsfJLQdjm9bcm5uNuO"
 VIDEO_FILE_ID = "1Pzoj2inI9Y5pqltsqLQnl1QOLD-Wa6tL"
-BACKGROUND_IMAGE_FILE = "my_background.jpg"
+BACKGROUND_IMAGE_FILE = os.path.join(HERE, "my_background.jpg")
 
 # --------------------
 # DEEP LEARNING CUSTOM OBJECTS
@@ -340,7 +341,7 @@ with tab1:
         st.markdown("### Don't have a file? Download a sample dataset.")
         st.markdown("Use this file to understand the required input format...")
         try:
-            with open("sample_csv_for_testing.csv", "rb") as f:
+            with open(os.path.join(HERE, "sample_csv_for_testing.csv"), "rb") as f:
                 sample_csv_data = f.read()
             st.download_button(label="Download Sample CSV", data=sample_csv_data, file_name="sample_csv_for_testing.csv", mime="text/csv", key="sample_download_button")
         except FileNotFoundError:
