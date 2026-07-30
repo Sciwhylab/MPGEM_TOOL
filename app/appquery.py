@@ -262,7 +262,7 @@ def contact_popup():
             """, unsafe_allow_html=True)
             st.markdown("<p style='font-size: 0.9rem; color: #a0b0c0;'>This application is maintained by the SciWhyLab team. For any inquiries, please feel free to reach out.</p>", unsafe_allow_html=True)
             st.markdown('**Email:** <a href="mailto:shandar@sciwhylab.org">shandar@sciwhylab.org</a>', unsafe_allow_html=True)
-            st.markdown("**Project GitHub:** [SougataJana/gini](https://github.com/SougataJana/gini)")
+            st.markdown("**Project GitHub:** [Sciwhylab/MPGEM_TOOL](https://github.com/Sciwhylab/MPGEM_TOOL)")
             st.divider()
 
             st.markdown("""
@@ -272,7 +272,7 @@ def contact_popup():
                 </div>
             """, unsafe_allow_html=True)
             st.markdown("<p style='font-size: 0.9rem; color: #a0b0c0;'>Encountered a bug? Please open an issue on our GitHub page.</p>", unsafe_allow_html=True)
-            st.link_button("Submit an Issue", "https://github.com/SougataJana/gini/issues/new")
+            st.link_button("Submit an Issue", "https://github.com/Sciwhylab/MPGEM_TOOL/issues/new")
             st.divider()
 
             st.markdown("""
@@ -386,11 +386,11 @@ with tab1:
                 submatrix, status, missing_genes = create_submatrix(user_matrix, ref_genes_pred)
                 st.write("### Compatibility Check:")
                 if status == "equal" or status == "extra":
-                    st.success("✅ Success! Your gene set is compatible. Ready for prediction.")
+                    st.success(" Success! Your gene set is compatible. Ready for prediction.")
                     st.session_state["submatrix"] = submatrix
                     st.session_state["reference_genes"] = ref_genes
                 elif status == "missing":
-                    st.error(f"❌ Your matrix is missing {len(missing_genes)} required genes.")
+                    st.error(f" Your matrix is missing {len(missing_genes)} required genes.")
                     st.dataframe(pd.DataFrame(missing_genes, columns=['Missing Genes']))
                     if "submatrix" in st.session_state: del st.session_state["submatrix"]
             except Exception as e:
@@ -403,13 +403,13 @@ with tab2:
     st.header("Step 2: Run Prediction")
     if "submatrix" in st.session_state:
         st.info("Your data is ready. Click the button below to run the deep learning model.")
-        if st.button("🚀 Run Model Prediction"):
-            with st.spinner("Running the deep learning model... 🧠"):
+        if st.button(" Run Model Prediction"):
+            with st.spinner("Running the deep learning model... "):
                 model = load_model_from_drive()
                 if model:
                     merged_df = predict_and_merge(st.session_state["submatrix"], st.session_state["reference_genes"], model)
                     st.session_state["merged_df"] = merged_df
-                    st.success("✅ Prediction complete!")
+                    st.success(" Prediction complete!")
                     st.toast('Your data has been successfully processed!', icon='🎉')
                     st.write("### Prediction Results Preview:")
                     st.dataframe(merged_df.head())
@@ -426,7 +426,7 @@ with tab3:
     if "merged_df" in st.session_state:
         st.info("The final matrix, with original and predicted values, is ready.")
         csv = st.session_state["merged_df"].to_csv().encode('utf-8')
-        st.download_button(label="💾 Download Full Predictions CSV", data=csv, file_name="full_gene_expression_prediction.csv", mime="text/csv")
+        st.download_button(label=" Download Full Predictions CSV", data=csv, file_name="full_gene_expression_prediction.csv", mime="text/csv")
         st.info(f"File Size: {len(csv) / (1024*1024):.2f} MB")
     else:
         st.warning("No prediction results to download. Please run the prediction first.")
@@ -468,7 +468,7 @@ with tab4:
 # TAB 5: TUTORIAL
 # --------------------
 with tab5:
-    st.header("🗺️ Tutorial")
+    st.header(" Tutorial")
     video_path = get_video_path()
     if video_path:
         st.video(video_path)
@@ -482,11 +482,11 @@ with tab5:
         4.  **Upload your file:** Click **"Upload Your CSV File Here"** to upload your gene expression matrix. The app will check for compatibility and provide feedback.
         """
     )
-    st.subheader("Step 2: ✨ Predict")
+    st.subheader("Step 2:  Predict")
     st.markdown(
         """
         1.  After a successful compatibility check in Step 1, navigate to this tab.
-        2.  Click the **"🚀 Run Model Prediction"** button.
+        2.  Click the **" Run Model Prediction"** button.
         3.  The app will download the pre-trained neural network model and predict the expression values for the complete set of genes.
         4.  This process may take a few minutes. A preview of the combined matrix will be shown once the prediction is complete.
         """
@@ -495,10 +495,10 @@ with tab5:
     st.markdown(
         """
         1.  Once the prediction is complete, the full gene expression matrix is ready.
-        2.  Click the **"💾 Download Full Predictions CSV"** button to download the complete file, including all predicted gene expression values, to your local computer.
+        2.  Click the **" Download Full Predictions CSV"** button to download the complete file, including all predicted gene expression values, to your local computer.
         """
     )
-    st.subheader("Step 4: 🎯 Query")
+    st.subheader("Step 4:  Query")
     st.markdown(
         """
         1.  This tab allows you to filter the prediction results interactively.
