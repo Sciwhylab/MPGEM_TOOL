@@ -117,9 +117,9 @@ Bundled in `src/mpgem/mpgemnorm/data/`:
 The reference statistics were computed from GPL570 expression data obtained from NCBI
 GEO. <!-- TODO: add GEO accession(s) and a one-line description of how the reference
 matrix was produced. -->
-# MPGEM — Molecular Prediction of Gene Expression Matrix
+# MPGEMPRED — Molecular Prediction of Gene Expression Matrix
 
-MPGEM is a web tool that expands a partial gene expression matrix into a much larger one. You supply
+MPGEMPRED is a web tool that expands a partial gene expression matrix into a much larger one. You supply
 expression values for a defined set of genes; a pre-trained deep learning model predicts the values
 for the remaining genes and returns both sets merged into a single matrix.
 
